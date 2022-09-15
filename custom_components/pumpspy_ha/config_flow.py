@@ -7,15 +7,13 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.pumpspy_ha.pumpspy import Pumpspy
+from .pumpspy import Pumpspy
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from homeassistant.const import (
-    CONF_DEVICE_ID,
     CONF_USERNAME,
-    CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
 )
 
