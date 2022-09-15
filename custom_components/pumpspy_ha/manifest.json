@@ -1,0 +1,15 @@
+{
+  "domain": "pumpspy_ha",
+  "name": "Pumpspy-HA",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pumpspy_ha",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@Crewski"
+  ],
+  "iot_class": "cloud_polling"
+}
