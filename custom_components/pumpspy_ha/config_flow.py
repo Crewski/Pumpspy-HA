@@ -114,9 +114,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input["device"])
             self._abort_if_unique_id_configured()
-            device_name = next(
-                (x for x in self.devices if x.deviceid == user_input["device"]), None
-            )
+            device_name = "Unknown"
+
+            for x in self.devices:
+                if x['deviceid'] == int(user_input['device']):
+                    device_name = x['device_types_name']
+                    
             self.pumpspy.set_device_info(user_input["device"], device_name)
             return self.async_create_entry(
                 title=f"Pumpspy ({device_name})", data=self.pumpspy.get_variables()
