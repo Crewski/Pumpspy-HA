@@ -13,7 +13,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from homeassistant.const import (
+    CONF_DEVICE_ID,
     CONF_USERNAME,
+    CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
 )
 

@@ -31,12 +31,13 @@ class Pumpspy:
         """Initialize."""
         self.hass = hass
         self.username = None
+        self.password = None
         self.access_token = None
         self.refresh_token = None
         self.deviceid = None
         self.device_name = None
 
-    async def get_token(self, password: str) -> None:
+    async def get_token(self) -> None:
         """Get bearer token"""
 
         # GET TOKEN
@@ -47,7 +48,7 @@ class Pumpspy:
         data = {
             "grant_type": CONF_PASSWORD,
             CONF_USERNAME: self.username,
-            CONF_PASSWORD: password,
+            CONF_PASSWORD: self.password,
         }
         session = aiohttp_client.async_get_clientsession(self.hass)
         async with session.post(
@@ -79,8 +80,8 @@ class Pumpspy:
     async def get_locations(self, username: str, password: str):
         """Get the available locations"""
         self.username = username
-
-        await self.get_token(password)
+        self.password = password
+        await self.get_token()
         uid = await self.get_uid()
         session = aiohttp_client.async_get_clientsession(self.hass)
         async with session.get(
@@ -110,6 +111,9 @@ class Pumpspy:
         ) as resp:
             if resp.status == 200:
                 return await resp.json()
+            elif resp.status == 401:
+                await self.get_token()
+                self.fetch_current_data()
             else:
                 raise CannotConnect
 
@@ -125,6 +129,9 @@ class Pumpspy:
         ) as resp:
             if resp.status == 200:
                 return await resp.json()
+            elif resp.status == 401:
+                await self.get_token()
+                self.fetch_current_data()
             else:
                 raise CannotConnect
 
@@ -152,6 +159,7 @@ class Pumpspy:
             CONF_DEVICEID: self.deviceid,
             CONF_USERNAME: self.username,
             CONF_DEVICE_NAME: self.device_name,
+            CONF_PASSWORD: self.password,
         }
 
     def set_variables(
@@ -161,6 +169,7 @@ class Pumpspy:
         deviceid,
         username: str,
         device_name: str,
+        password: str,
     ):
         """Set all the variables for a new instance"""
         self.username = username
@@ -168,6 +177,7 @@ class Pumpspy:
         self.refresh_token = refresh_token
         self.deviceid = deviceid
         self.device_name = device_name
+        self.password = password
 
 
 class CannotConnect(HomeAssistantError):
