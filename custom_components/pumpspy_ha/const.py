@@ -4,6 +4,7 @@ from homeassistant.const import DEVICE_CLASS_HUMIDITY
 
 
 DOMAIN = "pumpspy_ha"
+MANUFACTURER = "Pumpspy"
 
 BASE_URL = "http://www.pumpspy.com:8081"
 TOKEN_URL = "/oauth/token"
