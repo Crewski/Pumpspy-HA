@@ -5,21 +5,19 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from .pypumpspy import Pumpspy
 
 from homeassistant import config_entries
-from .pumpspy import Pumpspy
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from homeassistant.const import (
-    CONF_DEVICE_ID,
     CONF_USERNAME,
-    CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
 )
 
 from .const import (
+    CONF_DEVICEID,
     DOMAIN,
 )
 
@@ -29,11 +27,13 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Pumpspy-HA."""
 
-    VERSION = 1
+    VERSION = 2
 
-    pumpspy: Pumpspy
+    pumpspy: Pumpspy = None
     locations = None
     devices = None
+
+    data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -42,10 +42,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
-            self.pumpspy = Pumpspy(self.hass)
-            self.locations = await self.pumpspy.get_locations(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            self.pumpspy = Pumpspy(
+                username=user_input[CONF_USERNAME], password=user_input[CONF_PASSWORD]
             )
+            await self.pumpspy.setup()
+            self.data[CONF_USERNAME] = user_input[CONF_USERNAME]
+            self.data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+            self.locations = await self.pumpspy.get_locations()
             if self.locations:
                 return await self.async_step_location()
 
@@ -67,12 +70,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # skip this step if there is only 1 location
         if len(self.locations) == 1:
-            self.devices = await self.pumpspy.get_devices(self.locations[0]["lid"])
+            self.pumpspy.set_location(self.locations[0]["lid"])
+            self.devices = await self.pumpspy.get_devices()
             if self.devices:
                 return await self.async_step_device()
 
         if user_input is not None:
-            self.devices = await self.pumpspy.get_devices(user_input["location"])
+            self.pumpspy.set_location(self.locations[0]["lid"])
+            self.devices = await self.pumpspy.get_devices()
             if self.devices:
                 return await self.async_step_device()
 
@@ -103,14 +108,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # skip this step if there is only 1 device
         if len(self.devices) == 1:
-            self.pumpspy.set_device_info(
-                self.devices[0]["deviceid"], self.devices[0]["device_types_name"]
-            )
+            self.data[CONF_DEVICEID] = self.devices[0]["deviceid"]
             await self.async_set_unique_id(self.devices[0]["deviceid"])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=f'Pumpspy ({self.devices[0]["device_types_name"]})',
-                data=self.pumpspy.get_variables(),
+                data=self.data,
             )
 
         if user_input is not None:
@@ -119,12 +122,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_name = "Unknown"
 
             for x in self.devices:
-                if x['deviceid'] == int(user_input['device']):
-                    device_name = x['device_types_name']
-                    
-            self.pumpspy.set_device_info(user_input["device"], device_name)
+                if x["deviceid"] == int(user_input["device"]):
+                    device_name = x["device_types_name"]
+            self.data[CONF_DEVICEID] = user_input["device"]
             return self.async_create_entry(
-                title=f"Pumpspy ({device_name})", data=self.pumpspy.get_variables()
+                title=f"Pumpspy ({device_name})", data=self.data
             )
 
         options = []

@@ -10,8 +10,9 @@ from .const import DOMAIN, MANUFACTURER
 class PumpspyEntity(CoordinatorEntity[PumpspyCoordinator]):
     """Defines a base Pumpspy entity."""
 
-    def __init__(self, *, coordinator: PumpspyCoordinator) -> None:
+    def __init__(self, coordinator: PumpspyCoordinator) -> None:
         """Initialize the entity."""
+        self.coordinator = coordinator
         super().__init__(coordinator)
 
     @property
