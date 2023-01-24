@@ -2,8 +2,9 @@
   "domain": "pumpspy_ha",
   "name": "Pumpspy-HA",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/pumpspy_ha",
-  "requirements": [],
+  "documentation": "https://github.com/Crewski/Pumpspy-HA",
+  "issue_tracker": "https://github.com/Crewski/Pumpspy-HA/issues",
+  "requirements": ["aiohttp>=3.8.3"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
@@ -12,5 +13,5 @@
     "@Crewski"
   ],
   "iot_class": "cloud_polling",
-  "version": "0.1.1"
+  "version": "0.1.4"
 }
