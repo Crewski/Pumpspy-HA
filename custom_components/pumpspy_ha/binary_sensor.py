@@ -1,8 +1,11 @@
 """Platform for binary sensor integration."""
+from __future__ import annotations
+from typing import Any
+from collections.abc import Mapping
 
+from homeassistant.helpers.entity import EntityCategory
 
-from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from .entity import PumpspyEntity
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -29,27 +32,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     new_devices = [
-        AlertBinarySensor(coordinator, ALERT_CONNECTED),
-        AlertBinarySensor(coordinator, ALERT_HIGH_WATER),
-        AlertBinarySensor(coordinator, ALERT_AC_POWER_LOSS),
-        AlertBinarySensor(coordinator, ALERT_EXCESSIVE_CURRENT),
-        AlertBinarySensor(coordinator, ALERT_EXCESSIVE_RUN_TIME),
-        AlertBinarySensor(coordinator, ALERT_BATTERY_CHARGE_LEVEL),
-        AlertBinarySensor(coordinator, ALERT_BACKUP_EXCESSIVE_CURRET),
-        AlertBinarySensor(coordinator, ALERT_BACKUP_EXCESSIVE_RUN_TIME),
-        AlertBinarySensor(coordinator, ALERT_PRIMARY_PUMP_FAILURE),
-        AlertBinarySensor(coordinator, ALERT_BACKUP_PUMP_FAILURE),
+        AlertBinarySensor(coordinator=coordinator, alert=ALERT_CONNECTED),
+        AlertBinarySensor(coordinator=coordinator, alert=ALERT_HIGH_WATER),
+        AlertBinarySensor(coordinator=coordinator, alert=ALERT_AC_POWER_LOSS),
+        AlertBinarySensor(coordinator=coordinator, alert=ALERT_EXCESSIVE_CURRENT),
+        AlertBinarySensor(coordinator=coordinator, alert=ALERT_EXCESSIVE_RUN_TIME),
+        AlertBinarySensor(coordinator=coordinator, alert=ALERT_BATTERY_CHARGE_LEVEL),
+        AlertBinarySensor(coordinator=coordinator, alert=ALERT_BACKUP_EXCESSIVE_CURRET),
+        AlertBinarySensor(
+            coordinator=coordinator, alert=ALERT_BACKUP_EXCESSIVE_RUN_TIME
+        ),
+        AlertBinarySensor(coordinator=coordinator, alert=ALERT_PRIMARY_PUMP_FAILURE),
+        AlertBinarySensor(coordinator=coordinator, alert=ALERT_BACKUP_PUMP_FAILURE),
     ]
     if new_devices:
         async_add_entities(new_devices)
 
 
-class AlertBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class AlertBinarySensor(PumpspyEntity, BinarySensorEntity):
     """Alert Binary Sensor"""
 
     def __init__(self, coordinator, alert: str):
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator=coordinator)
         self._available = True
         self._alert = alert
         self._attr_device_class = (
@@ -57,6 +62,7 @@ class AlertBinarySensor(CoordinatorEntity, BinarySensorEntity):
             if alert == ALERT_CONNECTED
             else BinarySensorDeviceClass.PROBLEM
         )
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
         device_info = self.coordinator.api.get_device_info()
 
@@ -65,16 +71,13 @@ class AlertBinarySensor(CoordinatorEntity, BinarySensorEntity):
             f'{device_info[CONF_DEVICE_NAME]} {alert.replace("_", " ").title()}'
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if self.coordinator.data is None:
-            return
+    @property
+    def is_on(self) -> bool | None:
         val = self.coordinator.data["current"][0][self._alert]["state"]
         if self._alert == ALERT_BATTERY_CHARGE_LEVEL:
             val = not bool(val)
-        self._attr_is_on = val
-        self._attr_extra_state_attributes = {
-            "message": self.coordinator.data["current"][0][self._alert]["message"]
-        }
-        self.async_write_ha_state()
+        return val
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        return {"message": self.coordinator.data["current"][0][self._alert]["message"]}
