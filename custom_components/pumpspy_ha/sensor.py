@@ -34,6 +34,8 @@ from .const import (
     DOMAIN,
 )
 
+interval_names = {"day": CONF_DAILY, "week": CONF_WEEKLY, "month": CONF_MONTHLY}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add sensors for passed config_entry in HA."""
@@ -41,82 +43,53 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     new_devices = [
         SignalStrengthSensor(coordinator=coordinator),
-        BatterySensor(coordinator=coordinator),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_MAIN_PUMP,
-            sensor_type=CONF_CYCLES,
-            interval=CONF_DAILY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_MAIN_PUMP,
-            sensor_type=CONF_GALLONS,
-            interval=CONF_DAILY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_BACKUP_PUMP,
-            sensor_type=CONF_CYCLES,
-            interval=CONF_DAILY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_BACKUP_PUMP,
-            sensor_type=CONF_GALLONS,
-            interval=CONF_DAILY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_MAIN_PUMP,
-            sensor_type=CONF_CYCLES,
-            interval=CONF_MONTHLY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_MAIN_PUMP,
-            sensor_type=CONF_GALLONS,
-            interval=CONF_MONTHLY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_BACKUP_PUMP,
-            sensor_type=CONF_CYCLES,
-            interval=CONF_MONTHLY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_BACKUP_PUMP,
-            sensor_type=CONF_GALLONS,
-            interval=CONF_MONTHLY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_MAIN_PUMP,
-            sensor_type=CONF_CYCLES,
-            interval=CONF_WEEKLY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_MAIN_PUMP,
-            sensor_type=CONF_GALLONS,
-            interval=CONF_WEEKLY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_BACKUP_PUMP,
-            sensor_type=CONF_CYCLES,
-            interval=CONF_WEEKLY,
-        ),
-        TotalingSensor(
-            coordinator=coordinator,
-            pump=CONF_BACKUP_PUMP,
-            sensor_type=CONF_GALLONS,
-            interval=CONF_WEEKLY,
-        ),
         LastCycleSensor(coordinator=coordinator, pump=CONF_MAIN_PUMP),
-        LastCycleSensor(coordinator=coordinator, pump=CONF_BACKUP_PUMP),
     ]
+
+    for interval in coordinator.intervals:
+        new_devices.append(
+            TotalingSensor(
+                coordinator=coordinator,
+                pump=CONF_MAIN_PUMP,
+                sensor_type=CONF_CYCLES,
+                interval=interval_names[interval],
+            )
+        )
+        new_devices.append(
+            TotalingSensor(
+                coordinator=coordinator,
+                pump=CONF_MAIN_PUMP,
+                sensor_type=CONF_GALLONS,
+                interval=interval_names[interval],
+            )
+        )
+
+        # add the backup pump sensors if the device has it
+        if coordinator.api.has_backup() is True:
+            new_devices.append(
+                TotalingSensor(
+                    coordinator=coordinator,
+                    pump=CONF_BACKUP_PUMP,
+                    sensor_type=CONF_CYCLES,
+                    interval=interval_names[interval],
+                )
+            )
+            new_devices.append(
+                TotalingSensor(
+                    coordinator=coordinator,
+                    pump=CONF_BACKUP_PUMP,
+                    sensor_type=CONF_GALLONS,
+                    interval=interval_names[interval],
+                )
+            )
+
+    # add backup pump related items if applicable
+    if coordinator.api.has_backup() is True:
+        new_devices.append(
+            LastCycleSensor(coordinator=coordinator, pump=CONF_BACKUP_PUMP)
+        )
+        new_devices.append(BatterySensor(coordinator=coordinator))
+
     if new_devices:
         async_add_entities(new_devices)
 

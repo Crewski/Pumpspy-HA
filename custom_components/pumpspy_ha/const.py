@@ -1,7 +1,5 @@
 """Constants for the Pumpspy-HA integration."""
 
-from homeassistant.const import DEVICE_CLASS_HUMIDITY
-
 
 DOMAIN = "pumpspy_ha"
 MANUFACTURER = "Pumpspy"

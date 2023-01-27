@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://github.com/Crewski/Pumpspy-HA",
   "issue_tracker": "https://github.com/Crewski/Pumpspy-HA/issues",
-  "requirements": ["aiohttp>=3.8.3"],
+  "requirements": ["aiohttp>=3.8.1"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

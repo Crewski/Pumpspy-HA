@@ -5,6 +5,8 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+
+from homeassistant.core import callback
 from .pypumpspy import Pumpspy
 
 from homeassistant import config_entries
@@ -18,6 +20,8 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DEVICEID,
+    CONF_MONTHLY,
+    CONF_WEEKLY,
     DOMAIN,
 )
 
@@ -32,6 +36,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     pumpspy: Pumpspy = None
     locations = None
     devices = None
+    device_name = None
 
     data: dict[str, Any] = {}
 
@@ -111,10 +116,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.data[CONF_DEVICEID] = self.devices[0]["deviceid"]
             await self.async_set_unique_id(self.devices[0]["deviceid"])
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=f'Pumpspy ({self.devices[0]["device_types_name"]})',
-                data=self.data,
-            )
+            self.device_name = self.devices[0]["device_types_name"]
+            return await self.async_step_sensors()
+            # return self.async_create_entry(
+            #     title=f'Pumpspy ({self.devices[0]["device_types_name"]})',
+            #     data=self.data,
+            # )
 
         if user_input is not None:
             await self.async_set_unique_id(user_input["device"])
@@ -124,10 +131,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for x in self.devices:
                 if x["deviceid"] == int(user_input["device"]):
                     device_name = x["device_types_name"]
+                    self.device_name = device_name
             self.data[CONF_DEVICEID] = user_input["device"]
-            return self.async_create_entry(
-                title=f"Pumpspy ({device_name})", data=self.data
-            )
+            return await self.async_step_sensors()
+            # return self.async_create_entry(
+            #     title=f"Pumpspy ({device_name})", data=self.data
+            # )
 
         options = []
         for device in self.devices:
@@ -146,4 +155,63 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="device", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_sensors(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure optional sensors."""
+
+        errors = {}
+        if user_input is not None:
+            self.data[CONF_WEEKLY] = user_input[CONF_WEEKLY]
+            self.data[CONF_MONTHLY] = user_input[CONF_MONTHLY]
+
+            return self.async_create_entry(
+                title=f"Pumpspy ({self.device_name})", data=self.data
+            )
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_WEEKLY): bool,
+                vol.Required(CONF_MONTHLY): bool,
+            }
+        )
+        return self.async_show_form(
+            step_id="sensors", data_schema=data_schema, errors=errors
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+        options = {
+            vol.Required(
+                CONF_WEEKLY,
+                default=self.config_entry.options.get(CONF_WEEKLY, False),
+            ): bool,
+            vol.Required(
+                CONF_MONTHLY,
+                default=self.config_entry.options.get(CONF_MONTHLY, False),
+            ): bool,
+        }
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(options),
         )
