@@ -1,27 +1,48 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
-        },
-        "step": {
-            "user": {
-                "description": "Enter your login credentials for Pumpspy/Pitboss+.  Your username is your email address.",
-                "data": {
-                    "password": "Password",
-                    "username": "Username"
-                }
-            },
-            "location": {
-                "description": "Select the location of the device."
-            },
-            "device": {
-                "description": "Select the device."
-            }
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "description": "Enter your login credentials for Pumpspy/Pitboss+.  Your username is your email address.",
+        "data": {
+          "password": "Password",
+          "username": "Username"
         }
+      },
+      "location": {
+        "description": "Select the location of the device."
+      },
+      "device": {
+        "description": "Select the device."
+      },
+      "sensors": {
+        "title": "Optional sensors",
+        "description": "Optional sensors can cause delays in intializing and retrieving data, up to several minutes.  This can be changed via configure later.",
+        "data": {
+          "weekly": "Weekly Sensor",
+          "monthly": "Monthly Sensor"
+        }
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optional sensors",
+        "description": "Optional sensors can cause delays in intializing and retrieving data, up to several minutes.  This can be changed via configure later.",
+        "data": {
+          "weekly": "Weekly Sensor",
+          "monthly": "Monthly Sensor"
+        }
+      }
+    }
+  },
+  "title": "Pumpspy"
 }

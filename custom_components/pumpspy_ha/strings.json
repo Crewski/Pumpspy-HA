@@ -16,6 +16,14 @@
       "device": {
         "title": "Device",
         "description": "Select the device."
+      },
+      "sensors": {
+        "title": "Optional sensors",
+        "description": "Optional sensors can cause delays in intializing and retrieving data, up to several minutes.  This can be changed via configure later.",
+        "data": {
+          "weekly": "Weekly Sensor",
+          "monthly": "Monthly Sensor"
+        }
       }
     },
     "error": {
@@ -25,6 +33,18 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optional sensors",
+        "description": "Optional sensors can cause delays in intializing and retrieving data, up to several minutes.  This can be changed via configure later.",
+        "data": {
+          "weekly": "Weekly Sensor",
+          "monthly": "Monthly Sensor"
+        }
+      }
     }
   }
 }

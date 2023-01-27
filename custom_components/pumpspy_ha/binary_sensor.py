@@ -37,14 +37,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         AlertBinarySensor(coordinator=coordinator, alert=ALERT_AC_POWER_LOSS),
         AlertBinarySensor(coordinator=coordinator, alert=ALERT_EXCESSIVE_CURRENT),
         AlertBinarySensor(coordinator=coordinator, alert=ALERT_EXCESSIVE_RUN_TIME),
-        AlertBinarySensor(coordinator=coordinator, alert=ALERT_BATTERY_CHARGE_LEVEL),
-        AlertBinarySensor(coordinator=coordinator, alert=ALERT_BACKUP_EXCESSIVE_CURRET),
-        AlertBinarySensor(
-            coordinator=coordinator, alert=ALERT_BACKUP_EXCESSIVE_RUN_TIME
-        ),
-        AlertBinarySensor(coordinator=coordinator, alert=ALERT_PRIMARY_PUMP_FAILURE),
-        AlertBinarySensor(coordinator=coordinator, alert=ALERT_BACKUP_PUMP_FAILURE),
     ]
+
+    if coordinator.api.has_backup() is True:
+        new_devices.extend(
+            [
+                AlertBinarySensor(
+                    coordinator=coordinator, alert=ALERT_PRIMARY_PUMP_FAILURE
+                ),
+                AlertBinarySensor(
+                    coordinator=coordinator, alert=ALERT_BATTERY_CHARGE_LEVEL
+                ),
+                AlertBinarySensor(
+                    coordinator=coordinator, alert=ALERT_BACKUP_EXCESSIVE_CURRET
+                ),
+                AlertBinarySensor(
+                    coordinator=coordinator, alert=ALERT_BACKUP_EXCESSIVE_RUN_TIME
+                ),
+                AlertBinarySensor(
+                    coordinator=coordinator, alert=ALERT_BACKUP_PUMP_FAILURE
+                ),
+            ]
+        )
     if new_devices:
         async_add_entities(new_devices)
 
